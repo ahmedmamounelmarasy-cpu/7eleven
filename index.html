@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>7eleven Cafe - 7 إيليفن كافيه</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -168,6 +169,11 @@
     </footer>
 
     <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://gtamikjyzuhceqejikme.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YW1pa2p5enVoY2VxZWppa21lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MTExNDQsImV4cCI6MjA5Mjk4NzE0NH0.DH47zEnjd7OCTz6Hy9TMbBCmj1jlOotN8Dg4Yh4FfFM';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         // Initialize AOS
         AOS.init({
             duration: 800,
@@ -190,9 +196,29 @@
             { id: 12, name: "قهوة تركي", price: 30, category: "hot", image: "https://images.unsplash.com/photo-1544787210-2211dca44367?auto=format&fit=crop&w=500&q=80" }
         ];
 
-        const menuItems = JSON.parse(localStorage.getItem('menuItems')) || defaultItems;
-
+        let menuItems = [];
         let cart = [];
+
+        // Fetch Menu from Supabase
+        async function fetchMenu() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('menu_items')
+                    .select('*')
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+                menuItems = data.length > 0 ? data : defaultItems;
+                renderMenu(menuItems);
+            } catch (err) {
+                console.error('Error fetching menu:', err);
+                menuItems = defaultItems;
+                renderMenu(menuItems);
+            }
+        }
+
+        // Initial Render
+        fetchMenu();
 
         // Render Menu
         function renderMenu(items) {
@@ -339,8 +365,6 @@
             toggleCart();
         }
 
-        // Initial Render
-        renderMenu(menuItems);
     </script>
 </body>
 </html>
