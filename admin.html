@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7eleven - لوحة التحكم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0a0a0a; color: white; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; }
+        .btn-primary { background: linear-gradient(45deg, #C59D5F, #4B2C20); }
+        .input-field { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 0.75rem; color: white; width: 100%; }
+        .input-field:focus { outline: none; border-color: #C59D5F; }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-8">
+            <div class="flex items-center gap-4">
+                <img src="logo.jpg" alt="Logo" class="w-12 h-12 rounded-full object-cover border-2 border-[#C59D5F]">
+                <h1 class="text-2xl font-bold">لوحة التحكم <span class="text-[#C59D5F]">7eleven</span></h1>
+            </div>
+            <a href="index.html" class="text-gray-400 hover:text-white transition-colors">
+                <i class="fa-solid fa-arrow-left ml-2"></i> العودة للموقع
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Add/Edit Form -->
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6 sticky top-8">
+                    <h2 id="form-title" class="text-xl font-bold mb-6 text-[#C59D5F]">إضافة منتج جديد</h2>
+                    <form id="product-form" class="space-y-4">
+                        <input type="hidden" id="product-id">
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">اسم المنتج</label>
+                            <input type="text" id="product-name" class="input-field" required placeholder="مثلاً: لاتيه كراميل">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">السعر (ج.م)</label>
+                            <input type="number" id="product-price" class="input-field" required placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">الفئة</label>
+                            <select id="product-category" class="input-field">
+                                <option value="hot">مشروبات ساخنة</option>
+                                <option value="cold">مشروبات باردة</option>
+                                <option value="sweets">حلويات</option>
+                                <option value="snacks">سناكس</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">رابط الصورة</label>
+                            <input type="url" id="product-image" class="input-field" required placeholder="https://unsplash.com/...">
+                        </div>
+                        <div class="pt-4 flex gap-2">
+                            <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">حفظ المنتج</button>
+                            <button type="button" id="cancel-edit" class="hidden bg-gray-800 w-full py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Products List -->
+            <div class="lg:col-span-2">
+                <div class="glass-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-bold">قائمة المنتجات</h2>
+                        <div class="flex gap-3 items-center">
+                            <button onclick="resetToDefaults()" class="text-xs text-gray-500 hover:text-red-400 transition-colors">استعادة الافتراضي</button>
+                            <span id="product-count" class="bg-[#C59D5F]/20 text-[#C59D5F] px-3 py-1 rounded-full text-sm font-bold">0 منتج</span>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right">
+                            <thead>
+                                <tr class="text-gray-400 border-b border-white/5">
+                                    <th class="pb-4 font-medium">المنتج</th>
+                                    <th class="pb-4 font-medium">الفئة</th>
+                                    <th class="pb-4 font-medium">السعر</th>
+                                    <th class="pb-4 font-medium text-left">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body" class="divide-y divide-white/5">
+                                <!-- Products will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default Data
+        const defaultItems = [
+            { id: 1, name: "إسبريسو", price: 35, category: "hot", image: "https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?auto=format&fit=crop&w=500&q=80" },
+            { id: 2, name: "كابتشينو", price: 55, category: "hot", image: "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=500&q=80" },
+            { id: 3, name: "لاتيه", price: 60, category: "hot", image: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=500&q=80" },
+            { id: 4, name: "ميكاتو كراميل", price: 65, category: "hot", image: "https://images.unsplash.com/photo-1485808191679-5f86510681a2?auto=format&fit=crop&w=500&q=80" },
+            { id: 5, name: "آيس لاتيه", price: 65, category: "cold", image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=500&q=80" },
+            { id: 6, name: "سموذي مانجو", price: 70, category: "cold", image: "https://images.unsplash.com/photo-1546173159-315724a31696?auto=format&fit=crop&w=500&q=80" },
+            { id: 7, name: "موهيتو ليمون", price: 60, category: "cold", image: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=500&q=80" },
+            { id: 8, name: "تشيز كيك", price: 80, category: "sweets", image: "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?auto=format&fit=crop&w=500&q=80" },
+            { id: 9, name: "مولتن كيك", price: 85, category: "sweets", image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&w=500&q=80" },
+            { id: 10, name: "كرواسون جبنة", price: 45, category: "snacks", image: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80" },
+            { id: 11, name: "ساندوتش دجاج", price: 95, category: "snacks", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=500&q=80" },
+            { id: 12, name: "قهوة تركي", price: 30, category: "hot", image: "https://images.unsplash.com/photo-1544787210-2211dca44367?auto=format&fit=crop&w=500&q=80" }
+        ];
+
+        let products = JSON.parse(localStorage.getItem('menuItems')) || defaultItems;
+        let isEditing = false;
+
+        const form = document.getElementById('product-form');
+        const tableBody = document.getElementById('products-table-body');
+        const productCount = document.getElementById('product-count');
+        const cancelBtn = document.getElementById('cancel-edit');
+        const formTitle = document.getElementById('form-title');
+
+        // Initial Load
+        renderProducts();
+
+        function renderProducts() {
+            productCount.innerText = `${products.length} منتج`;
+            localStorage.setItem('menuItems', JSON.stringify(products));
+            
+            tableBody.innerHTML = products.map(item => `
+                <tr class="hover:bg-white/5 transition-colors group">
+                    <td class="py-4">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.image}" class="w-10 h-10 rounded-lg object-cover">
+                            <span class="font-bold">${item.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-4 text-gray-400 text-sm">
+                        ${getCategoryName(item.category)}
+                    </td>
+                    <td class="py-4 font-bold text-[#C59D5F]">
+                        ${item.price} ج.م
+                    </td>
+                    <td class="py-4 text-left">
+                        <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="editProduct(${item.id})" class="p-2 text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <button onclick="deleteProduct(${item.id})" class="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getCategoryName(cat) {
+            const names = { hot: 'ساخن', cold: 'بارد', sweets: 'حلويات', snacks: 'سناكس' };
+            return names[cat] || cat;
+        }
+
+        form.onsubmit = (e) => {
+            e.preventDefault();
+            const id = document.getElementById('product-id').value;
+            const newProduct = {
+                id: id ? parseInt(id) : Date.now(),
+                name: document.getElementById('product-name').value,
+                price: parseInt(document.getElementById('product-price').value),
+                category: document.getElementById('product-category').value,
+                image: document.getElementById('product-image').value
+            };
+
+            if (id) {
+                products = products.map(p => p.id === parseInt(id) ? newProduct : p);
+            } else {
+                products.push(newProduct);
+            }
+
+            resetForm();
+            renderProducts();
+            alert('تم حفظ المنتج بنجاح!');
+        };
+
+        window.editProduct = (id) => {
+            const p = products.find(p => p.id === id);
+            if (!p) return;
+
+            document.getElementById('product-id').value = p.id;
+            document.getElementById('product-name').value = p.name;
+            document.getElementById('product-price').value = p.price;
+            document.getElementById('product-category').value = p.category;
+            document.getElementById('product-image').value = p.image;
+
+            formTitle.innerText = 'تعديل المنتج';
+            cancelBtn.classList.remove('hidden');
+            isEditing = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        window.deleteProduct = (id) => {
+            if (confirm('هل أنت متأكد من حذف هذا المنتج؟')) {
+                products = products.filter(p => p.id !== id);
+                renderProducts();
+            }
+        };
+
+        window.resetToDefaults = () => {
+            if (confirm('هل أنت متأكد من استعادة القائمة الافتراضية؟ سيتم حذف جميع التعديلات الحالية.')) {
+                products = [...defaultItems];
+                renderProducts();
+            }
+        };
+
+        cancelBtn.onclick = resetForm;
+
+        function resetForm() {
+            form.reset();
+            document.getElementById('product-id').value = '';
+            formTitle.innerText = 'إضافة منتج جديد';
+            cancelBtn.classList.add('hidden');
+            isEditing = false;
+        }
+    </script>
+</body>
+</html>

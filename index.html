@@ -162,6 +162,9 @@
             <h1 class="text-xl font-bold">7<span class="text-[#C59D5F]">eleven</span></h1>
         </div>
         <p class="text-gray-500">&copy; 2026 7eleven Cafe. جميع الحقوق محفوظة.</p>
+        <div class="mt-4">
+            <a href="admin.html" class="text-gray-600 hover:text-[#C59D5F] text-xs transition-colors">لوحة التحكم</a>
+        </div>
     </footer>
 
     <script>
@@ -172,7 +175,7 @@
         });
 
         // Menu Data
-        const menuItems = [
+        const defaultItems = [
             { id: 1, name: "إسبريسو", price: 35, category: "hot", image: "https://images.unsplash.com/photo-1510707577719-ae7c14805e3a?auto=format&fit=crop&w=500&q=80" },
             { id: 2, name: "كابتشينو", price: 55, category: "hot", image: "https://images.unsplash.com/photo-1534778101976-62847782c213?auto=format&fit=crop&w=500&q=80" },
             { id: 3, name: "لاتيه", price: 60, category: "hot", image: "https://images.unsplash.com/photo-1570968915860-54d5c301fa9f?auto=format&fit=crop&w=500&q=80" },
@@ -186,6 +189,8 @@
             { id: 11, name: "ساندوتش دجاج", price: 95, category: "snacks", image: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=500&q=80" },
             { id: 12, name: "قهوة تركي", price: 30, category: "hot", image: "https://images.unsplash.com/photo-1544787210-2211dca44367?auto=format&fit=crop&w=500&q=80" }
         ];
+
+        const menuItems = JSON.parse(localStorage.getItem('menuItems')) || defaultItems;
 
         let cart = [];
 
