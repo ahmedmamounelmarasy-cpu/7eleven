@@ -11,13 +11,30 @@
     <style>
         body { font-family: 'Cairo', sans-serif; background-color: #0a0a0a; color: white; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; }
-        .btn-primary { background: linear-gradient(45deg, #C59D5F, #4B2C20); }
-        .input-field { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.75rem; padding: 0.75rem; color: white; width: 100%; }
-        .input-field:focus { outline: none; border-color: #C59D5F; }
+        .btn-primary { background: linear-gradient(45deg, #C59D5F, #4B2C20); box-shadow: 0 4px 15px rgba(197, 157, 95, 0.2); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(197, 157, 95, 0.3); }
+        .input-field { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 0.85rem; color: white; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); -webkit-appearance: none; }
+        .input-field:focus { outline: none; border-color: #C59D5F; background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 4px rgba(197, 157, 95, 0.1); }
+        select.input-field { padding-right: 2.5rem; }
+        select.input-field option { background-color: #121212; color: white; padding: 12px; }
+        .product-card { transition: all 0.3s ease; }
+        .product-card:hover { background: rgba(255, 255, 255, 0.05); transform: scale(1.01); }
     </style>
 </head>
 <body class="p-4 sm:p-8">
-    <div class="max-w-6xl mx-auto">
+    <!-- Password Overlay -->
+    <div id="password-overlay" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div class="glass-card p-8 text-center max-w-sm w-full mx-4">
+            <img src="logo.jpg" alt="Logo" class="w-16 h-16 rounded-full object-cover border-2 border-[#C59D5F] mx-auto mb-4">
+            <h2 class="text-xl font-bold mb-6">لوحة التحكم <span class="text-[#C59D5F]">7eleven</span></h2>
+            <input type="password" id="admin-password" class="input-field text-center mb-4" placeholder="أدخل كلمة السر">
+            <button id="login-btn" onclick="var p=document.getElementById('admin-password').value;if(p==='937312401'){document.getElementById('password-overlay').style.display='none';document.getElementById('admin-content').classList.remove('hidden');document.getElementById('admin-content').classList.add('max-w-6xl','mx-auto');}else{document.getElementById('password-error').classList.remove('hidden');}" class="btn-primary w-full py-3 rounded-xl font-bold">دخول</button>
+            <p id="password-error" class="text-red-500 mt-3 text-sm hidden">كلمة السر غير صحيحة</p>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
+    <div id="admin-content" class="hidden">
         <!-- Header -->
         <div class="flex justify-between items-center mb-8">
             <div class="flex items-center gap-4">
@@ -46,16 +63,37 @@
                         </div>
                         <div>
                             <label class="block text-sm text-gray-400 mb-1">الفئة</label>
-                            <select id="product-category" class="input-field">
-                                <option value="hot">مشروبات ساخنة</option>
-                                <option value="cold">مشروبات باردة</option>
-                                <option value="sweets">حلويات</option>
-                                <option value="snacks">سناكس</option>
-                            </select>
+                            <div class="relative">
+                                <select id="product-category" class="input-field appearance-none pr-10 cursor-pointer">
+                                    <option value="hot">☕ مشروبات ساخنة</option>
+                                    <option value="cold">🧊 مشروبات باردة</option>
+                                    <option value="sweets">🍰 حلويات</option>
+                                    <option value="snacks">🥐 سناكس</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[#C59D5F]">
+                                    <i class="fa-solid fa-chevron-down text-sm"></i>
+                                </div>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-sm text-gray-400 mb-1">رابط الصورة</label>
-                            <input type="url" id="product-image" class="input-field" required placeholder="https://unsplash.com/...">
+                            <label class="block text-sm text-gray-400 mb-1">صورة المنتج (رابط أو رفع)</label>
+                            <div class="space-y-3">
+                                <input type="url" id="product-image" class="input-field" placeholder="ضع رابط الصورة هنا...">
+                                <div class="relative">
+                                    <input type="file" id="product-file" class="hidden" accept="image/*">
+                                    <button type="button" onclick="document.getElementById('product-file').click()" class="w-full py-2 px-4 border-2 border-dashed border-white/10 rounded-xl text-gray-400 hover:border-[#C59D5F] hover:text-[#C59D5F] transition-all flex items-center justify-center gap-2 bg-white/5">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                        <span id="file-name">أو اختر صورة من جهازك</span>
+                                    </button>
+                                </div>
+                                <div id="image-preview-container" class="hidden">
+                                    <img id="image-preview" src="" class="w-full h-32 object-cover rounded-xl border border-white/10">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1">الوصف (اختياري)</label>
+                            <textarea id="product-description" class="input-field" rows="2" placeholder="وصف مختصر للمنتج..."></textarea>
                         </div>
                         <div class="pt-4 flex gap-2">
                             <button type="submit" class="btn-primary w-full py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">حفظ المنتج</button>
@@ -125,9 +163,58 @@
         const productCount = document.getElementById('product-count');
         const cancelBtn = document.getElementById('cancel-edit');
         const formTitle = document.getElementById('form-title');
+        const productFile = document.getElementById('product-file');
+        const fileName = document.getElementById('file-name');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+
+        let selectedFile = null;
+
+        // Handle File Selection and Preview
+        productFile.onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFile = file;
+                fileName.innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreviewContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        };
 
         // Initial Load
         fetchProducts();
+
+        async function uploadImage(file) {
+            try {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Math.random().toString(36).substring(2)}_${Date.now()}.${fileExt}`;
+                const filePath = `product-images/${fileName}`;
+
+                const { data, error } = await supabaseClient.storage
+                    .from('products')
+                    .upload(filePath, file);
+
+                if (error) {
+                    if (error.message.includes('bucket not found')) {
+                        throw new Error('يرجى إنشاء Storage Bucket باسم "products" في Supabase أولاً');
+                    }
+                    throw error;
+                }
+
+                const { data: { publicUrl } } = supabaseClient.storage
+                    .from('products')
+                    .getPublicUrl(filePath);
+
+                return publicUrl;
+            } catch (err) {
+                console.error('Upload error:', err);
+                throw err;
+            }
+        }
 
         async function fetchProducts() {
             try {
@@ -137,25 +224,32 @@
                     .order('id', { ascending: true });
 
                 if (error) throw error;
-                products = data;
+                products = data && data.length > 0 ? data : defaultItems;
                 renderProducts();
             } catch (err) {
                 console.error('Error fetching:', err);
-                // Fallback to local storage or defaults if table doesn't exist yet
-                products = JSON.parse(localStorage.getItem('menuItems')) || defaultItems;
+                products = defaultItems;
                 renderProducts();
             }
         }
 
         function renderProducts() {
             productCount.innerText = `${products.length} منتج`;
-            
+
+            if (products.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-gray-500">لا توجد منتجات. اضغط على "استعادة الافتراضي" لإضافة المنتجات.</td></tr>`;
+                return;
+            }
+
             tableBody.innerHTML = products.map(item => `
-                <tr class="hover:bg-white/5 transition-colors group">
-                    <td class="py-4">
+                <tr class="product-card transition-colors group">
+                    <td class="py-4 px-2">
                         <div class="flex items-center gap-3">
-                            <img src="${item.image}" class="w-10 h-10 rounded-lg object-cover">
-                            <span class="font-bold">${item.name}</span>
+                            <img src="${item.image || 'https://via.placeholder.com/100x100?text=No+Image'}" class="w-10 h-10 rounded-lg object-cover" onerror="this.src='https://via.placeholder.com/100x100?text=No+Image'">
+                            <div>
+                                <span class="font-bold block">${item.name}</span>
+                                ${item.description ? `<span class="text-xs text-gray-500">${item.description}</span>` : ''}
+                            </div>
                         </div>
                     </td>
                     <td class="py-4 text-gray-400 text-sm">
@@ -185,15 +279,29 @@
 
         form.onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('product-id').value;
-            const productData = {
-                name: document.getElementById('product-name').value,
-                price: parseInt(document.getElementById('product-price').value),
-                category: document.getElementById('product-category').value,
-                image: document.getElementById('product-image').value
-            };
-
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerText;
+            
             try {
+                submitBtn.disabled = true;
+                submitBtn.innerText = 'جاري الحفظ...';
+
+                const id = document.getElementById('product-id').value;
+                let imageUrl = document.getElementById('product-image').value || null;
+
+                // If a file is selected, upload it first
+                if (selectedFile) {
+                    imageUrl = await uploadImage(selectedFile);
+                }
+
+                const productData = {
+                    name: document.getElementById('product-name').value,
+                    price: parseInt(document.getElementById('product-price').value),
+                    category: document.getElementById('product-category').value,
+                    image: imageUrl,
+                    description: document.getElementById('product-description').value || null
+                };
+
                 if (id) {
                     const { error } = await supabaseClient
                         .from('menu_items')
@@ -212,7 +320,10 @@
                 alert('تم حفظ المنتج بنجاح!');
             } catch (err) {
                 console.error('Error saving:', err);
-                alert('حدث خطأ أثناء الحفظ. تأكد من إعدادات قاعدة البيانات.');
+                alert(err.message || 'حدث خطأ أثناء الحفظ.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = originalBtnText;
             }
         };
 
@@ -224,7 +335,15 @@
             document.getElementById('product-name').value = p.name;
             document.getElementById('product-price').value = p.price;
             document.getElementById('product-category').value = p.category;
-            document.getElementById('product-image').value = p.image;
+            document.getElementById('product-image').value = p.image || '';
+            document.getElementById('product-description').value = p.description || '';
+
+            if (p.image) {
+                imagePreview.src = p.image;
+                imagePreviewContainer.classList.remove('hidden');
+            } else {
+                imagePreviewContainer.classList.add('hidden');
+            }
 
             formTitle.innerText = 'تعديل المنتج';
             cancelBtn.classList.remove('hidden');
@@ -251,35 +370,64 @@
         window.resetToDefaults = async () => {
             if (confirm('هل أنت متأكد من استعادة القائمة الافتراضية؟ سيتم حذف جميع التعديلات الحالية.')) {
                 try {
-                    // Delete all first
                     const { error: delError } = await supabaseClient
                         .from('menu_items')
                         .delete()
-                        .neq('id', 0); // Delete all
+                        .neq('id', 0);
                     if (delError) throw delError;
 
-                    // Insert defaults
-                    const itemsToInsert = defaultItems.map(({id, ...rest}) => rest); // Supabase usually handles IDs
+                    const itemsToInsert = defaultItems.map(({id, ...rest}) => rest);
                     const { error: insError } = await supabaseClient
                         .from('menu_items')
                         .insert(itemsToInsert);
                     if (insError) throw insError;
 
                     fetchProducts();
+                    alert('تم استعادة القائمة الافتراضية بنجاح!');
                 } catch (err) {
                     console.error('Error resetting:', err);
                     alert('حدث خطأ أثناء استعادة البيانات.');
                 }
             }
-                cancelBtn.onclick = resetForm;
+        };
+
+        cancelBtn.onclick = resetForm;
 
         function resetForm() {
             form.reset();
             document.getElementById('product-id').value = '';
+            selectedFile = null;
+            fileName.innerText = 'أو اختر صورة من جهازك';
+            imagePreviewContainer.classList.add('hidden');
             formTitle.innerText = 'إضافة منتج جديد';
             cancelBtn.classList.add('hidden');
             isEditing = false;
         }
+
+        function checkPassword() {
+            const password = document.getElementById('admin-password').value;
+            if (password === '937312401') {
+                document.getElementById('password-overlay').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                document.getElementById('admin-content').classList.add('max-w-6xl', 'mx-auto');
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('login-btn').addEventListener('click', checkPassword);
+        document.getElementById('admin-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                var p = document.getElementById('admin-password').value;
+                if(p==='937312401'){
+                    document.getElementById('password-overlay').style.display='none';
+                    document.getElementById('admin-content').classList.remove('hidden');
+                    document.getElementById('admin-content').classList.add('max-w-6xl','mx-auto');
+                }else{
+                    document.getElementById('password-error').classList.remove('hidden');
+                }
+            }
+        });
     </script>
 </body>
 </html>
