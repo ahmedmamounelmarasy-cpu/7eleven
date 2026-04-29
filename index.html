@@ -34,13 +34,13 @@
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #008163, #f32d3d);
+            background: linear-gradient(45deg, #C59D5F, #4B2C20);
             transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
             transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 129, 99, 0.3);
+            box-shadow: 0 10px 20px rgba(197, 157, 95, 0.3);
         }
 
         .cart-sidebar {
@@ -53,8 +53,9 @@
         }
 
         .category-pill.active {
-            background-color: #008163;
+            background-color: #C59D5F;
             color: white;
+            border-color: #C59D5F;
         }
 
         /* Mobile Optimization Fixes */
@@ -83,20 +84,20 @@
     <!-- Header / Navbar -->
     <nav class="fixed top-0 w-full z-50 glass-card rounded-none border-t-0 border-x-0 bg-black/50 px-6 py-4 flex justify-between items-center">
         <div class="flex items-center gap-3">
-            <img src="logo.jpg" alt="7eleven Logo" class="h-12 w-12 rounded-full object-cover border-2 border-[#008163]">
-            <h1 class="text-2xl font-bold tracking-wider">7<span class="text-[#008163]">eleven</span></h1>
+            <img src="logo.jpg" alt="7eleven Logo" class="h-12 w-12 rounded-full object-cover border-2 border-[#C59D5F]">
+            <h1 class="text-2xl font-bold tracking-wider">7<span class="text-[#C59D5F]">eleven</span></h1>
         </div>
         
         <div class="relative cursor-pointer" onclick="toggleCart()">
-            <i class="fa-solid fa-cart-shopping text-2xl hover:text-[#008163] transition-colors"></i>
-            <span id="cart-count" class="absolute -top-2 -right-2 bg-[#f32d3d] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
+            <i class="fa-solid fa-cart-shopping text-2xl hover:text-[#C59D5F] transition-colors"></i>
+            <span id="cart-count" class="absolute -top-2 -right-2 bg-[#C59D5F] text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">0</span>
         </div>
     </nav>
 
     <!-- Hero Section -->
     <section class="hero-bg min-h-screen flex flex-col justify-center items-center text-center px-6 py-20">
-        <img src="logo.jpg" data-aos="zoom-in" class="w-56 h-56 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full mb-8 border-4 border-[#008163] shadow-2xl object-cover">
-        <h2 data-aos="fade-up" class="text-3xl sm:text-4xl md:text-6xl font-extrabold mb-4 leading-tight">أهلاً بك في <span class="text-[#008163]">7</span><span class="text-[#f32d3d]">eleven</span> كافيه</h2>
+        <img src="logo.jpg" data-aos="zoom-in" class="w-56 h-56 sm:w-72 sm:h-72 md:w-96 md:h-96 rounded-full mb-8 border-4 border-[#C59D5F] shadow-2xl object-cover">
+        <h2 data-aos="fade-up" class="text-3xl sm:text-4xl md:text-6xl font-extrabold mb-4 leading-tight">أهلاً بك في <span class="text-[#C59D5F]">7</span><span class="text-[#F1C40F]">eleven</span> كافيه</h2>
         <p data-aos="fade-up" data-aos-delay="200" class="text-2xl sm:text-3xl md:text-5xl font-bold text-white mb-10 italic">Sip. Relax. Repeat</p>
         <a href="#menu" data-aos="fade-up" data-aos-delay="400" class="btn-primary px-8 py-3 sm:px-10 sm:py-4 rounded-full text-lg sm:text-xl font-bold shadow-lg">تصفح المنيو</a>
     </section>
@@ -105,15 +106,15 @@
     <section id="menu" class="py-16 sm:py-24 px-4 sm:px-6 max-w-7xl mx-auto">
         <div class="text-center mb-12 sm:mb-16">
             <h3 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4" data-aos="fade-down">قائمة الطعام</h3>
-            <div class="w-20 sm:w-24 h-1.5 bg-[#008163] mx-auto mb-8 rounded-full"></div>
+            <div class="w-20 sm:w-24 h-1.5 bg-[#C59D5F] mx-auto mb-8 rounded-full"></div>
             
             <!-- Categories -->
             <div class="category-container flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 hide-scrollbar" data-aos="fade-up">
-                <button onclick="filterMenu('all')" class="category-pill active px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#008163] transition-all text-sm sm:text-base">الكل</button>
-                <button onclick="filterMenu('hot')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#008163] transition-all text-sm sm:text-base">مشروبات ساخنة</button>
-                <button onclick="filterMenu('cold')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#008163] transition-all text-sm sm:text-base">مشروبات باردة</button>
-                <button onclick="filterMenu('sweets')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#008163] transition-all text-sm sm:text-base">حلويات</button>
-                <button onclick="filterMenu('snacks')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#008163] transition-all text-sm sm:text-base">سناك</button>
+                <button onclick="filterMenu('all')" class="category-pill active px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#C59D5F] transition-all text-sm sm:text-base">الكل</button>
+                <button onclick="filterMenu('hot')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#C59D5F] transition-all text-sm sm:text-base">مشروبات ساخنة</button>
+                <button onclick="filterMenu('cold')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#C59D5F] transition-all text-sm sm:text-base">مشروبات باردة</button>
+                <button onclick="filterMenu('sweets')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#C59D5F] transition-all text-sm sm:text-base">حلويات</button>
+                <button onclick="filterMenu('snacks')" class="category-pill px-5 py-2 sm:px-6 sm:py-2.5 rounded-full border border-gray-700 hover:border-[#C59D5F] transition-all text-sm sm:text-base">سناك</button>
             </div>
         </div>
 
@@ -158,7 +159,7 @@
     <footer class="py-12 bg-black border-t border-gray-900 text-center">
         <div class="flex justify-center items-center gap-3 mb-6">
             <img src="logo.jpg" alt="7eleven Logo" class="h-10 w-10 rounded-full object-cover">
-            <h1 class="text-xl font-bold">7<span class="text-[#008163]">eleven</span></h1>
+            <h1 class="text-xl font-bold">7<span class="text-[#C59D5F]">eleven</span></h1>
         </div>
         <p class="text-gray-500">&copy; 2026 7eleven Cafe. جميع الحقوق محفوظة.</p>
     </footer>
@@ -202,7 +203,7 @@
                     <div class="p-3 sm:p-6">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2 gap-1">
                             <h5 class="text-base sm:text-xl font-bold line-clamp-1">${item.name}</h5>
-                            <span class="text-[#008163] font-bold text-sm sm:text-lg">${item.price} ج.م</span>
+                            <span class="text-[#C59D5F] font-bold text-sm sm:text-lg">${item.price} ج.م</span>
                         </div>
                         <p class="text-gray-400 text-xs sm:text-sm line-clamp-2 hidden sm:block">مشروب محضر بعناية من أجود المكونات.</p>
                     </div>
@@ -296,11 +297,11 @@
                     <img src="${item.image}" class="w-16 h-16 rounded-lg object-cover">
                     <div class="flex-grow">
                         <h6 class="font-bold">${item.name}</h6>
-                        <span class="text-sm text-[#008163]">${item.price} ج.م</span>
+                        <span class="text-sm text-[#C59D5F]">${item.price} ج.م</span>
                     </div>
                     <div class="flex flex-col items-center gap-2">
                         <div class="flex items-center gap-3 bg-black/30 rounded-lg px-2 py-1">
-                            <button onclick="changeQuantity(${item.id}, 1)" class="hover:text-[#008163]"><i class="fa-solid fa-plus text-xs"></i></button>
+                            <button onclick="changeQuantity(${item.id}, 1)" class="hover:text-[#C59D5F]"><i class="fa-solid fa-plus text-xs"></i></button>
                             <span class="font-bold">${item.quantity}</span>
                             <button onclick="changeQuantity(${item.id}, -1)" class="hover:text-red-500"><i class="fa-solid fa-minus text-xs"></i></button>
                         </div>
