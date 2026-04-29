@@ -30,6 +30,7 @@
             background-size: cover;
             background-position: center center;
             background-attachment: fixed;
+            background-repeat: no-repeat;
         }
 
         .btn-primary {
@@ -60,7 +61,9 @@
         @media (max-width: 640px) {
             .hero-bg {
                 background-attachment: scroll; /* Fixes performance on mobile */
-                background-position: 50% 0%; /* Better focus on image top for mobile */
+                background-position: center center; /* Center the logo on mobile */
+                background-size: cover;
+                background-image: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('bg.jpg'); /* Slightly darker on mobile for better text readability */
             }
             .category-container {
                 overflow-x: auto;
