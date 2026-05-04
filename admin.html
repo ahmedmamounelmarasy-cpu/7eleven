@@ -6,6 +6,7 @@
     <title>7eleven - لوحة التحكم</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -106,6 +107,19 @@
                             <button type="button" id="cancel-edit" class="hidden bg-gray-800 w-full py-3 rounded-xl font-bold hover:bg-gray-700 transition-colors">إلغاء</button>
                         </div>
                     </form>
+                </div>
+
+                <!-- QR Code Section -->
+                <div class="glass-card p-6 mt-8 text-center">
+                    <h2 class="text-xl font-bold mb-6 text-[#C59D5F]">QR Code المنيو</h2>
+                    <div class="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
+                        <div id="qrcode"></div>
+                    </div>
+                    <p class="text-gray-400 text-sm mb-6">رابط المنيو الحالي للموقع</p>
+                    <button onclick="downloadQR()" class="btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i>
+                        تحميل QR Code
+                    </button>
                 </div>
             </div>
 
@@ -434,6 +448,36 @@
                 }
             }
         });
+
+        // QR Code Generation
+        const siteURL = window.location.origin;
+        const qr = new QRCode(document.getElementById("qrcode"), {
+            text: siteURL,
+            width: 180,
+            height: 180,
+            colorDark: "#1a1208",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
+
+        function downloadQR() {
+            const canvas = document.querySelector("#qrcode canvas");
+            if (!canvas) {
+                // For browsers that use img instead of canvas (like older mobile)
+                const img = document.querySelector("#qrcode img");
+                if (img) {
+                    const link = document.createElement("a");
+                    link.download = "7eleven-qr-code.png";
+                    link.href = img.src;
+                    link.click();
+                }
+                return;
+            }
+            const link = document.createElement("a");
+            link.download = "7eleven-qr-code.png";
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
     </script>
 </body>
 </html>
