@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7eleven - نظام الكاشير</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0a0a0a; color: white; overflow-x: hidden; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; }
+        .status-pending { background-color: #f59e0b; color: #000; }
+        .status-preparing { background-color: #3b82f6; color: #fff; }
+        .status-completed { background-color: #10b981; color: #fff; }
+        .status-cancelled { background-color: #ef4444; color: #fff; }
+        
+        .order-card { transition: all 0.3s ease; border-right: 4px solid transparent; }
+        .order-card.new-order { animation: pulse-border 2s infinite; border-right-color: #C59D5F; }
+
+        .input-field { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 0.85rem; color: white; width: 100%; transition: all 0.3s ease; }
+        .input-field:focus { outline: none; border-color: #C59D5F; background: rgba(255, 255, 255, 0.1); }
+        .btn-primary { background: linear-gradient(45deg, #C59D5F, #4B2C20); transition: all 0.3s ease; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(197, 157, 95, 0.3); }
+        
+        @keyframes pulse-border {
+            0% { border-right-color: #C59D5F; }
+            50% { border-right-color: transparent; }
+            100% { border-right-color: #C59D5F; }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        
+        /* Sound Toggle Switch */
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #C59D5F; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body class="p-4 sm:p-6 min-h-screen">
+    <!-- Password Overlay -->
+    <div id="password-overlay" class="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div class="glass-card p-8 text-center max-w-sm w-full mx-4">
+            <img src="logo.jpg" alt="Logo" class="w-16 h-16 rounded-full object-cover border-2 border-[#C59D5F] mx-auto mb-4">
+            <h2 class="text-xl font-bold mb-6">نظام الكاشير <span class="text-[#C59D5F]">7eleven</span></h2>
+            <input type="password" id="cashier-password" class="input-field text-center mb-4" placeholder="أدخل كلمة السر">
+            <button onclick="checkCashierPassword()" class="btn-primary w-full py-3 rounded-xl font-bold">دخول النظام</button>
+            <p id="password-error" class="text-red-500 mt-3 text-sm hidden">كلمة السر غير صحيحة</p>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="main-content" class="hidden">
+        <!-- Sound Element -->
+        <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+
+        <div class="max-w-7xl mx-auto">
+            <!-- Header -->
+            <header class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="logo.jpg" alt="Logo" class="w-14 h-14 rounded-full object-cover border-2 border-[#C59D5F]">
+                    <div>
+                        <h1 class="text-2xl font-bold">نظام الكاشير <span class="text-[#C59D5F]">7eleven</span></h1>
+                        <p class="text-gray-400 text-sm">متابعة الطلبات الحية والتحكم في حالتها</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-6 glass-card px-6 py-3">
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-medium">التنبيه الصوتي</span>
+                        <label class="switch">
+                            <input type="checkbox" id="sound-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="h-8 w-px bg-gray-700"></div>
+                    <div id="connection-status" class="flex items-center gap-2 text-green-500">
+                        <span class="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-sm font-bold">متصل مباشر</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <div class="glass-card p-4 text-center">
+                    <p class="text-gray-400 text-xs mb-1">الطلبات الجديدة</p>
+                    <h3 id="stat-pending" class="text-2xl font-bold text-amber-500">0</h3>
+                </div>
+                <div class="glass-card p-4 text-center">
+                    <p class="text-gray-400 text-xs mb-1">قيد التحضير</p>
+                    <h3 id="stat-preparing" class="text-2xl font-bold text-blue-500">0</h3>
+                </div>
+                <div class="glass-card p-4 text-center">
+                    <p class="text-gray-400 text-xs mb-1">تم التسليم اليوم</p>
+                    <h3 id="stat-completed" class="text-2xl font-bold text-green-500">0</h3>
+                </div>
+                <div class="glass-card p-4 text-center">
+                    <p class="text-gray-400 text-xs mb-1">إجمالي المبيعات</p>
+                    <h3 id="stat-total" class="text-2xl font-bold text-[#C59D5F]">0 <span class="text-xs">ج.م</span></h3>
+                </div>
+            </div>
+
+            <!-- Tabs Navigation -->
+            <div class="flex gap-4 mb-6 border-b border-white/5 pb-px">
+                <button onclick="switchTab('active')" id="tab-active" class="px-6 py-3 font-bold text-sm border-b-2 border-[#C59D5F] text-[#C59D5F] transition-all">الطلبات الحالية</button>
+                <button onclick="switchTab('archive')" id="tab-archive" class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-white transition-all">تم التسليم اليوم</button>
+            </div>
+
+            <!-- Orders Grid -->
+            <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Order cards will be injected here -->
+                <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-20">
+                    <i class="fa-solid fa-mug-hot text-8xl mb-4"></i>
+                    <p class="text-2xl font-bold">في انتظار طلبات جديدة...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Details Modal (Optional but good for notes) -->
+    <div id="order-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card w-full max-w-md p-8 relative">
+            <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-2xl"></i>
+            </button>
+            <div id="modal-content">
+                <!-- Modal content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auth Logic
+        function checkCashierPassword() {
+            const password = document.getElementById('cashier-password').value;
+            if (password === '937312401') {
+                document.getElementById('password-overlay').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                // Initialize after auth
+                fetchOrders();
+                subscribeToOrders();
+            } else {
+                document.getElementById('password-error').classList.remove('hidden');
+            }
+        }
+
+        document.getElementById('cashier-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkCashierPassword();
+        });
+
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://gtamikjyzuhceqejikme.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0YW1pa2p5enVoY2VxZWppa21lIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0MTExNDQsImV4cCI6MjA5Mjk4NzE0NH0.DH47zEnjd7OCTz6Hy9TMbBCmj1jlOotN8Dg4Yh4FfFM';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let orders = [];
+        let currentTab = 'active'; // 'active' or 'archive'
+
+        // Fetch initial orders
+        async function fetchOrders() {
+            try {
+                const today = new Date();
+                today.setHours(0,0,0,0);
+
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .gte('created_at', today.toISOString())
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                orders = data;
+                renderOrders();
+                updateStats();
+            } catch (err) {
+                console.error('Error fetching orders:', err);
+                document.getElementById('connection-status').innerHTML = `
+                    <span class="h-2 w-2 rounded-full bg-red-500"></span>
+                    <span class="text-sm font-bold text-red-500">خطأ في الاتصال</span>
+                `;
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // Update UI
+            const activeTab = document.getElementById('tab-active');
+            const archiveTab = document.getElementById('tab-archive');
+            
+            if (tab === 'active') {
+                activeTab.classList.add('border-[#C59D5F]', 'text-[#C59D5F]');
+                activeTab.classList.remove('border-transparent', 'text-gray-500');
+                archiveTab.classList.remove('border-[#C59D5F]', 'text-[#C59D5F]');
+                archiveTab.classList.add('border-transparent', 'text-gray-500');
+            } else {
+                archiveTab.classList.add('border-[#C59D5F]', 'text-[#C59D5F]');
+                archiveTab.classList.remove('border-transparent', 'text-gray-500');
+                activeTab.classList.remove('border-[#C59D5F]', 'text-[#C59D5F]');
+                activeTab.classList.add('border-transparent', 'text-gray-500');
+            }
+            
+            renderOrders();
+        }
+
+        // Real-time Subscription
+        function subscribeToOrders() {
+            supabaseClient
+                .channel('orders-channel')
+                .on('postgres_changes', { event: '*', table: 'orders', schema: 'public' }, (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        orders.unshift(payload.new);
+                        playNotification();
+                        // Add temporary class for animation
+                        setTimeout(() => {
+                            const card = document.getElementById(`order-${payload.new.id}`);
+                            if (card) card.classList.add('new-order');
+                        }, 100);
+                    } else if (payload.eventType === 'UPDATE') {
+                        const index = orders.findIndex(o => o.id === payload.new.id);
+                        if (index !== -1) {
+                            orders[index] = payload.new;
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        orders = orders.filter(o => o.id !== payload.old.id);
+                    }
+                    renderOrders();
+                    updateStats();
+                })
+                .subscribe();
+        }
+
+        function playNotification() {
+            const soundEnabled = document.getElementById('sound-toggle').checked;
+            if (soundEnabled) {
+                const audio = document.getElementById('notification-sound');
+                audio.currentTime = 0;
+                audio.play().catch(e => console.log('Audio play failed:', e));
+            }
+        }
+
+        function renderOrders() {
+            const container = document.getElementById('orders-container');
+            
+            // Filter based on tab
+            const filteredOrders = orders.filter(order => {
+                if (currentTab === 'active') {
+                    return order.status === 'pending' || order.status === 'preparing';
+                } else {
+                    return order.status === 'completed' || order.status === 'cancelled';
+                }
+            });
+
+            if (filteredOrders.length === 0) {
+                const emptyMsg = currentTab === 'active' 
+                    ? 'لا توجد طلبات جارية حالياً' 
+                    : 'لا توجد طلبات مؤرشفة لليوم';
+                
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-20">
+                        <i class="fa-solid fa-mug-hot text-8xl mb-4"></i>
+                        <p class="text-2xl font-bold">${emptyMsg}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredOrders.map(order => {
+                const statusClass = `status-${order.status}`;
+                const statusText = {
+                    'pending': 'جديد',
+                    'preparing': 'جاري التحضير',
+                    'completed': 'تم التسليم',
+                    'cancelled': 'ملغي'
+                }[order.status] || order.status;
+
+                const time = new Date(order.created_at).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+
+                return `
+                    <div id="order-${order.id}" class="glass-card order-card p-6 flex flex-col h-full relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${statusClass}">${statusText}</span>
+                                <p class="text-gray-400 text-xs mt-2"><i class="fa-regular fa-clock ml-1"></i> ${time}</p>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-xl font-extrabold text-[#C59D5F]">
+                                    ${order.table_number === 'takeaway' ? 'سفري' : 'طاولة ' + order.table_number}
+                                </h4>
+                                <p class="text-gray-500 text-xs">#${order.id.toString().slice(-4)}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex-grow space-y-3 mb-6">
+                            ${order.items.map(item => `
+                                <div class="flex justify-between items-center bg-white/5 rounded-lg px-3 py-2">
+                                    <div class="flex items-center gap-2">
+                                        <span class="bg-[#C59D5F] text-black w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold">${item.quantity}</span>
+                                        <span class="text-sm font-bold">${item.name}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-400">${item.price * item.quantity} ج.م</span>
+                                </div>
+                            `).join('')}
+                            
+                            ${order.notes ? `
+                                <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mt-4">
+                                    <p class="text-amber-500 text-xs font-bold mb-1"><i class="fa-solid fa-note-sticky ml-1"></i> ملاحظات:</p>
+                                    <p class="text-sm text-gray-300 italic">${order.notes}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+
+                        <div class="mt-auto border-t border-white/5 pt-4">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-gray-400">الإجمالي</span>
+                                <span class="text-lg font-bold">${order.total} ج.م</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-2">
+                                ${order.status === 'pending' ? `
+                                    <button onclick="updateStatus(${order.id}, 'preparing')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-bold transition-colors">تحضير</button>
+                                    <button onclick="updateStatus(${order.id}, 'cancelled')" class="bg-red-600/20 hover:bg-red-600/40 text-red-500 py-2 rounded-lg text-sm font-bold transition-colors">إلغاء</button>
+                                ` : ''}
+                                ${order.status === 'preparing' ? `
+                                    <button onclick="updateStatus(${order.id}, 'completed')" class="col-span-2 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-bold transition-colors">تم التسليم</button>
+                                ` : ''}
+                                ${order.status === 'completed' || order.status === 'cancelled' ? `
+                                    <button onclick="deleteOrder(${order.id})" class="col-span-2 bg-white/5 hover:bg-white/10 text-gray-400 py-2 rounded-lg text-sm font-bold transition-colors">حذف نهائي</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function updateStatus(id, newStatus) {
+            try {
+                const { error } = await supabaseClient
+                    .from('orders')
+                    .update({ status: newStatus })
+                    .eq('id', id);
+
+                if (error) throw error;
+                
+                // Locally update status for instant UI feel (though real-time will catch it too)
+                const index = orders.findIndex(o => o.id === id);
+                if (index !== -1) orders[index].status = newStatus;
+                renderOrders();
+                updateStats();
+            } catch (err) {
+                console.error('Error updating status:', err);
+                alert('حدث خطأ أثناء تحديث الحالة');
+            }
+        }
+
+        async function deleteOrder(id) {
+            if (!confirm('هل تريد أرشفة (حذف) هذا الطلب من الشاشة؟')) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('orders')
+                    .delete()
+                    .eq('id', id);
+
+                if (error) throw error;
+                orders = orders.filter(o => o.id !== id);
+                renderOrders();
+                updateStats();
+            } catch (err) {
+                console.error('Error deleting order:', err);
+                alert('حدث خطأ أثناء الحذف');
+            }
+        }
+
+        function updateStats() {
+            const pending = orders.filter(o => o.status === 'pending').length;
+            const preparing = orders.filter(o => o.status === 'preparing').length;
+            const completed = orders.filter(o => o.status === 'completed').length;
+            const total = orders
+                .filter(o => o.status === 'completed')
+                .reduce((sum, o) => sum + o.total, 0);
+
+            document.getElementById('stat-pending').innerText = pending;
+            document.getElementById('stat-preparing').innerText = preparing;
+            document.getElementById('stat-completed').innerText = completed;
+            document.getElementById('stat-total').innerText = total;
+        }
+
+        // Initialize - Removed from here to only run after password check
+        // fetchOrders();
+        // subscribeToOrders();
+
+        // Browser requires user interaction for sound
+        document.body.addEventListener('click', function() {
+            const audio = document.getElementById('notification-sound');
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(() => {});
+        }, { once: true });
+
+    </script>
+</body>
+</html>
