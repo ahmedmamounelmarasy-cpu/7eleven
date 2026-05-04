@@ -111,14 +111,35 @@
 
                 <!-- QR Code Section -->
                 <div class="glass-card p-6 mt-8 text-center">
-                    <h2 class="text-xl font-bold mb-6 text-[#C59D5F]">QR Code المنيو</h2>
-                    <div class="bg-white p-4 rounded-2xl inline-block mb-4 shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 text-[#C59D5F]">QR Code المنيو</h2>
+                    <p class="text-gray-400 text-sm mb-6">أنشئ رمز QR الخاص بملنيو الموقع للمطبوعات</p>
+                    <button onclick="toggleQRModal()" class="btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-qrcode"></i>
+                        عرض وتحميل QR Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- QR Code Modal -->
+            <div id="qr-modal" class="fixed inset-0 bg-black/90 z-[100] hidden flex items-center justify-center p-4 backdrop-blur-md">
+                <div class="glass-card max-w-sm w-full p-8 text-center relative border border-white/10">
+                    <button onclick="toggleQRModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-2xl"></i>
+                    </button>
+                    
+                    <h3 class="text-2xl font-bold mb-6">QR Code المنيو</h3>
+                    
+                    <div class="bg-white p-6 rounded-3xl inline-block mb-6 shadow-2xl">
                         <div id="qrcode"></div>
                     </div>
-                    <p class="text-gray-400 text-sm mb-6">رابط المنيو الحالي للموقع</p>
-                    <button onclick="downloadQR()" class="btn-primary w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i>
-                        تحميل QR Code
+                    
+                    <p class="text-gray-400 text-sm mb-8 leading-relaxed">
+                        هذا الرمز يوجه العملاء مباشرة إلى صفحة المنيو الخاصة بك. يمكنك تحميله وطباعته على الطاولات.
+                    </p>
+                    
+                    <button onclick="downloadQR()" class="btn-primary w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-3 text-lg">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        تحميل الصورة (PNG)
                     </button>
                 </div>
             </div>
@@ -453,12 +474,17 @@
         const siteURL = window.location.origin;
         const qr = new QRCode(document.getElementById("qrcode"), {
             text: siteURL,
-            width: 180,
-            height: 180,
+            width: 220,
+            height: 220,
             colorDark: "#1a1208",
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H
         });
+
+        function toggleQRModal() {
+            const modal = document.getElementById('qr-modal');
+            modal.classList.toggle('hidden');
+        }
 
         function downloadQR() {
             const canvas = document.querySelector("#qrcode canvas");
