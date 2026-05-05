@@ -106,10 +106,17 @@
             </div>
 
             <!-- Tabs Navigation -->
-            <div class="flex gap-4 mb-6 border-b border-white/5 pb-px">
-                <button onclick="switchTab('active')" id="tab-active" class="px-6 py-3 font-bold text-sm border-b-2 border-[#C59D5F] text-[#C59D5F] transition-all">الطلبات الحالية</button>
-                <button onclick="switchTab('archive')" id="tab-archive" class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-white transition-all">تم التسليم اليوم</button>
+        <div class="flex flex-wrap gap-4 mb-6 border-b border-white/5 pb-px">
+            <button onclick="switchTab('active')" id="tab-active" class="px-6 py-3 font-bold text-sm border-b-2 border-[#C59D5F] text-[#C59D5F] transition-all">الطلبات الحالية</button>
+            <button onclick="switchTab('archive')" id="tab-archive" class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-white transition-all">تم التسليم اليوم</button>
+            <button onclick="switchTab('history')" id="tab-history" class="px-6 py-3 font-bold text-sm border-b-2 border-transparent text-gray-500 hover:text-white transition-all">سجل الطلبات السابقة</button>
+            
+            <!-- Date Filter (Hidden by default, shown in history tab) -->
+            <div id="date-filter-container" class="hidden mr-auto flex items-center gap-3 bg-white/5 px-4 py-1 rounded-xl border border-white/10 mb-2">
+                <span class="text-xs text-gray-400">تصفية بالتاريخ:</span>
+                <input type="date" id="history-date" onchange="fetchHistoryOrders()" class="bg-transparent text-sm text-[#C59D5F] focus:outline-none cursor-pointer">
             </div>
+        </div>
 
             <!-- Orders Grid -->
             <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -159,9 +166,10 @@
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let orders = [];
-        let currentTab = 'active'; // 'active' or 'archive'
+        let historyOrders = []; // New array for history
+        let currentTab = 'active'; // 'active', 'archive', or 'history'
 
-        // Fetch initial orders
+        // Fetch initial orders (Today only)
         async function fetchOrders() {
             try {
                 const today = new Date();
@@ -186,23 +194,61 @@
             }
         }
 
+        // Fetch History Orders by Date
+        async function fetchHistoryOrders() {
+            const dateInput = document.getElementById('history-date').value;
+            if (!dateInput) return;
+
+            try {
+                const startDate = new Date(dateInput);
+                startDate.setHours(0,0,0,0);
+                
+                const endDate = new Date(dateInput);
+                endDate.setHours(23,59,59,999);
+
+                const { data, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .gte('created_at', startDate.toISOString())
+                    .lte('created_at', endDate.toISOString())
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                historyOrders = data;
+                renderOrders();
+            } catch (err) {
+                console.error('Error fetching history:', err);
+                alert('حدث خطأ أثناء جلب سجل الطلبات');
+            }
+        }
+
         function switchTab(tab) {
             currentTab = tab;
             
             // Update UI
-            const activeTab = document.getElementById('tab-active');
-            const archiveTab = document.getElementById('tab-archive');
-            
-            if (tab === 'active') {
-                activeTab.classList.add('border-[#C59D5F]', 'text-[#C59D5F]');
-                activeTab.classList.remove('border-transparent', 'text-gray-500');
-                archiveTab.classList.remove('border-[#C59D5F]', 'text-[#C59D5F]');
-                archiveTab.classList.add('border-transparent', 'text-gray-500');
+            const tabs = ['active', 'archive', 'history'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    el.classList.add('border-[#C59D5F]', 'text-[#C59D5F]');
+                    el.classList.remove('border-transparent', 'text-gray-500');
+                } else {
+                    el.classList.remove('border-[#C59D5F]', 'text-[#C59D5F]');
+                    el.classList.add('border-transparent', 'text-gray-500');
+                }
+            });
+
+            // Show/Hide Date Filter
+            const dateFilter = document.getElementById('date-filter-container');
+            if (tab === 'history') {
+                dateFilter.classList.remove('hidden');
+                // Default to today if empty
+                if (!document.getElementById('history-date').value) {
+                    document.getElementById('history-date').valueAsDate = new Date();
+                    fetchHistoryOrders();
+                }
             } else {
-                archiveTab.classList.add('border-[#C59D5F]', 'text-[#C59D5F]');
-                archiveTab.classList.remove('border-transparent', 'text-gray-500');
-                activeTab.classList.remove('border-[#C59D5F]', 'text-[#C59D5F]');
-                activeTab.classList.add('border-transparent', 'text-gray-500');
+                dateFilter.classList.add('hidden');
             }
             
             renderOrders();
@@ -247,19 +293,21 @@
         function renderOrders() {
             const container = document.getElementById('orders-container');
             
+            let displayOrders = [];
+            
             // Filter based on tab
-            const filteredOrders = orders.filter(order => {
-                if (currentTab === 'active') {
-                    return order.status === 'pending' || order.status === 'preparing';
-                } else {
-                    return order.status === 'completed' || order.status === 'cancelled';
-                }
-            });
+            if (currentTab === 'active') {
+                displayOrders = orders.filter(order => order.status === 'pending' || order.status === 'preparing');
+            } else if (currentTab === 'archive') {
+                displayOrders = orders.filter(order => order.status === 'completed' || order.status === 'cancelled');
+            } else {
+                displayOrders = historyOrders;
+            }
 
-            if (filteredOrders.length === 0) {
-                const emptyMsg = currentTab === 'active' 
-                    ? 'لا توجد طلبات جارية حالياً' 
-                    : 'لا توجد طلبات مؤرشفة لليوم';
+            if (displayOrders.length === 0) {
+                let emptyMsg = 'لا توجد طلبات جارية حالياً';
+                if (currentTab === 'archive') emptyMsg = 'لا توجد طلبات مؤرشفة لليوم';
+                if (currentTab === 'history') emptyMsg = 'لا توجد طلبات مسجلة لهذا التاريخ';
                 
                 container.innerHTML = `
                     <div class="col-span-full flex flex-col items-center justify-center py-20 opacity-20">
@@ -270,7 +318,7 @@
                 return;
             }
 
-            container.innerHTML = filteredOrders.map(order => {
+            container.innerHTML = displayOrders.map(order => {
                 const statusClass = `status-${order.status}`;
                 const statusText = {
                     'pending': 'جديد',
